@@ -95,23 +95,22 @@ let actx = null;
 function clickSound() {
   if (!S.sound) return;
   try {
-    actx ||= new (window.AudioContext || window.webkitAudioContext)();
-    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
-    o.type = "square"; o.frequency.setValueAtTime(2600, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.03);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.06);
+    actx ||= new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume();
+    const t = actx.currentTime;
+    [0, 0.035].forEach((d, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.setValueAtTime(i ? 2600 : 3400, t + d); g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(0.35, t + d + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.025); o.connect(g).connect(actx.destination); o.start(t + d); o.stop(t + d + 0.03); });
   } catch {}
 }
 function beep() { if (!S.sound) return; try { actx ||= new (window.AudioContext || window.webkitAudioContext)(); const t = actx.currentTime; [0, 0.18, 0.36].forEach((d) => { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(0.25, t + d); g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.15); o.connect(g).connect(actx.destination); o.start(t + d); o.stop(t + d + 0.16); }); } catch {} }
 
 function confetti(n = 40) {
-  const box = $("#confetti"), cols = ["#0B8071", "#E31B26", "#E8A33A", "#5E4BB6", "#2E7AA8"];
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = $("#confetti"), cols = ["var(--green)", "var(--tan)", "var(--black)"];
   for (let i = 0; i < n; i++) {
-    const c = document.createElement("i");
-    c.style.left = Math.random() * 100 + "vw"; c.style.background = cols[i % cols.length];
-    c.style.animationDuration = 1.6 + Math.random() * 1.6 + "s"; c.style.animationDelay = Math.random() * 0.3 + "s";
-    c.style.transform = `rotate(${Math.random() * 360}deg)`;
-    box.appendChild(c); setTimeout(() => c.remove(), 3600);
+    const p = document.createElement("div"); p.className = "pawfly"; p.innerHTML = PAWF; p.style.color = cols[i % 3];
+    p.style.left = 40 + Math.random() * 20 + "%"; p.style.top = "55%";
+    p.style.setProperty("--dx", Math.random() * 360 - 180 + "px"); p.style.setProperty("--dy", -120 - Math.random() * 380 + "px");
+    p.style.setProperty("--r", Math.random() * 540 - 270 + "deg"); p.style.animationDelay = Math.random() * 0.15 + "s";
+    box.appendChild(p); setTimeout(() => p.remove(), 1900);
   }
 }
 function xpFloat(n, el) {
@@ -391,29 +390,28 @@ function renderTrilha() {
   const all = flatNodes(), done = all.filter(nodeDone).length, pct = Math.round((done / all.length) * 100);
   const { r, next } = rankOf(p.xp), rp = next ? Math.round(((p.xp - r.xp) / (next.xp - r.xp)) * 100) : 100;
   const hero = $("#hero");
-  hero.style.background = cur ? `linear-gradient(135deg, ${cur.color}, ${shade(cur.color, -28)})` : "";
   if (!cur) {
-    hero.innerHTML = `<p class="k">Trilha completa</p><h2>${esc(d.name)} é fera! 🏆</h2><p>Revisa os comandos 5 min por dia em lugares diferentes pra ele nunca esquecer.</p><div class="bar"><i style="width:100%"></i></div><div class="rank">⭐ ${esc(r.t)}</div><div class="paw">${PAWF}</div>`;
+    hero.innerHTML = `<p class="k">Trilha completa</p><h2>${esc(d.name)} é fera! 🏆</h2><p>Revisa os comandos 5 min por dia em lugares diferentes pra ele nunca esquecer.</p><div class="bar"><i style="width:100%"></i></div><div class="paw-bg">${PAWF}</div>`;
   } else {
     const st = cur.k === "x" ? `${(p.exams[cur.world]?.checks || []).length}/${cur.checks.length} testes` : cur.k === "c" ? `${LP(cur.id).checks.length}/${cur.checks.length} itens` : `${LP(cur.id).sessions.length}/${cur.n} sessões`;
     hero.innerHTML = `<p class="k">Treino de hoje · ${esc(cur.wname)} · ${st}</p><h2>${esc(cur.t)}</h2><p>${esc((cur.why || "Mostra tudo que ele aprendeu nesse mundo e libera o próximo!").split(". ")[0])}.</p>
       <div class="bar" aria-label="Progresso da trilha"><i style="width:${pct}%"></i></div>
-      <div class="row" style="justify-content:space-between"><button class="btn light" data-open="${cur.id}">${LP(cur.id).sessions?.length || LP(cur.id).checks?.length ? "Continuar" : "Começar"}</button><span style="font-weight:800;opacity:.95">${pct}% da trilha</span></div>
-      <div class="rank" style="margin-top:12px"><span>⭐ ${esc(r.t)}</span><div class="bar"><i style="width:${rp}%"></i></div><span>${next ? next.xp - p.xp + " XP" : "MAX"}</span></div>
-      <div class="paw">${PAWF}</div>`;
+      <div class="actions"><button class="btn light" data-open="${cur.id}">${LP(cur.id).sessions?.length || LP(cur.id).checks?.length ? "Continuar" : "Começar"}</button><span style="font-weight:700;opacity:.9">${pct}% da trilha</span></div>
+      <div class="rank"><span>⭐ ${esc(r.t)}</span><div class="bar"><i style="width:${rp}%"></i></div><span>${next ? next.xp - p.xp + " XP" : "MAX"}</span></div>
+      <div class="paw-bg">${PAWF}</div>`;
   }
   renderMissions();
-  const off = [0, 64, 0, -64]; let html = "";
+  const off = [0, 62, 0, -62]; let html = "";
   PATH.forEach((w, wi) => {
     const unl = worldUnlocked(wi), ld = w.nodes.filter(nodeDone).length;
-    html += `<div class="world ${unl ? "" : "locked"}" style="--wc:${w.color}"><div class="world-head" style="background:${w.color}"><div><div class="wn">Mundo ${wi + 1}</div><h3>${esc(w.name)}</h3><p>${unl ? esc(w.desc) : "🔒 Passa na prova do mundo anterior pra liberar"}</p></div><span class="count">${ld}/${w.nodes.length}</span></div><div class="trail">`;
+    html += `<div class="level ${unl ? "" : "locked"}"><div class="level-head"><h3>${wi + 1}. ${esc(w.name)}</h3><span>${ld}/${w.nodes.length}</span></div><p class="level-desc">${unl ? esc(w.desc) : "🔒 Passa na prova do mundo anterior pra liberar"}</p><div class="trail">`;
     w.nodes.forEach((n, j) => {
       const st = nodeStatus(n), isCur = cur && cur.id === n.id;
       const ic = st === "done" ? icon("check", 3) : st === "lock" ? icon("lock") : icon(n.ic);
       const s = n.k === "x" ? null : LP(n.id);
       const sub = st === "done" ? (n.k === "x" ? "Aprovado!" : "Aprendido") : st === "lock" ? (n.k === "x" ? "Termina as lições" : "") : n.k === "x" ? `${(P().exams[n.world]?.checks || []).length}/${n.checks.length}` : n.k === "c" ? `${s.checks.length}/${n.checks.length} itens` : `${s.sessions.length}/${n.n} sessões`;
       if (j > 0) html += `<div class="steps-paws" style="transform:translateX(${(off[j % 4] + off[(j - 1) % 4]) / 2}px)">${PAWF}${PAWF}</div>`;
-      html += `<div class="node ${st === "open" ? "" : st} ${isCur ? "cur" : ""} ${n.k === "x" ? "exam" : ""}" style="transform:translateX(${off[j % 4]}px)">${isCur ? `<span class="start-tag">${n.k === "x" ? "PROVA!" : "AGORA"}</span>` : ""}<button class="dot" data-open="${n.id}" aria-label="${esc(n.t)}">${ic}</button><div class="lbl">${esc(n.t)}</div><div class="sub">${esc(sub)}</div></div>`;
+      html += `<div class="node ${isCur ? "cur" : st === "open" ? "" : st} ${n.k === "x" ? "exam" : ""}" style="transform:translateX(${off[j % 4]}px)"><button class="dot" data-open="${n.id}" aria-label="${esc(n.t)}">${ic}</button><div class="lbl">${esc(n.t)}</div><div class="sub">${esc(sub)}</div></div>`;
     });
     html += `</div></div>`;
   });
@@ -455,12 +453,12 @@ function openNode(id) { openId = id; openSheet("", renderNode); }
 function renderNode() {
   const n = flatNodes().find((x) => x.id === openId); if (!n) return;
   const d = dog(), B = BREEDS[d.breed];
-  let h = `<div class="lhead" style="--wc:${n.color}"><div class="big">${icon(n.ic)}</div><div><h2>${esc(n.t)}</h2><p>Mundo ${n.wi + 1} · ${esc(n.wname)} · ${esc(n.min || "")}</p></div></div>`;
+  let h = `<div class="lhead"><div class="big">${icon(n.ic)}</div><div><h2>${esc(n.t)}</h2><p>Mundo ${n.wi + 1} · ${esc(n.wname)} · ${esc(n.min || "")}</p></div></div>`;
   if (n.k === "x") {
     const ex = (P().exams[n.world] ||= { checks: [], done: false });
     h += `<p class="why">Hora da prova! Testa cada item com o ${esc(d.name)}. Quando ele passar em tudo, o próximo mundo é liberado. Sem pressa: pode fazer em dias diferentes.</p>
-      <div class="panel"><h3>Testes</h3><ul class="stepl checks">${n.checks.map((x, k) => `<li class="${ex.checks.includes(k) ? "ok" : ""}" data-xk="${k}"><span class="box"></span><span>${esc(x)}</span></li>`).join("")}</ul>
-      ${ex.done ? `<p style="margin:10px 0 0;font-weight:800;color:var(--teal-d)">Aprovado ✓</p>` : `<button class="btn gold block" id="examPass" style="margin-top:12px" ${ex.checks.length >= n.checks.length ? "" : "disabled"}>🏆 Passou na prova!</button>`}</div>
+      <div class="panel"><h3>Testes</h3><ul class="checks">${n.checks.map((x, k) => `<li class="${ex.checks.includes(k) ? "ok" : ""}" data-xk="${k}"><span class="box"></span><span>${esc(x)}</span></li>`).join("")}</ul>
+      ${ex.done ? `<p style="margin:10px 0 0;font-weight:800;color:var(--green)">Aprovado ✓</p>` : `<button class="btn tan block" id="examPass" style="margin-top:12px" ${ex.checks.length >= n.checks.length ? "" : "disabled"}>🏆 Passou na prova!</button>`}</div>
       <div class="tip good"><b>Dica</b>Se algum item travar, volta na lição dele e faz mais umas sessões. A prova é pra ti ter certeza, não pra ter pressa.</div>`;
     $("#sheetBody").innerHTML = h;
     $$("[data-xk]").forEach((li) => li.onclick = () => { const k = +li.dataset.xk, i = ex.checks.indexOf(k); i < 0 ? ex.checks.push(k) : ex.checks.splice(i, 1); buzz(10); save(); renderNode(); });
@@ -474,23 +472,23 @@ function renderNode() {
     const doneSteps = s.steps.length;
     h += `<div class="panel"><div class="panel-head"><h3>Passo a passo</h3><span class="chip">${doneSteps}/${n.steps.length}</span></div>
       <p class="muted small" style="margin-top:-4px">Toca na etapa quando ele dominar ela.</p>
-      <ul class="stepl">${n.steps.map((x, k) => `<li class="${s.steps.includes(k) ? "ok" : ""}" data-st="${k}"><span class="box"></span><span>${esc(x)}</span></li>`).join("")}</ul></div>`;
+      <ul class="checks steps">${n.steps.map((x, k) => `<li class="${s.steps.includes(k) ? "ok" : ""}" data-st="${k}"><span class="box"></span><span>${esc(x)}</span></li>`).join("")}</ul></div>`;
     if (n.ok) h += `<div class="criteria"><span class="e">✅</span><div><b>Passa de fase quando:</b> ${esc(n.ok)}</div></div>`;
     h += `<div class="panel"><div class="panel-head"><h3>Sessões de treino</h3><span class="chip">${s.sessions.length}/${n.n}</span></div>
       <p class="muted small" style="margin:0">${esc(n.session || `Sessões de ${B.session} min (ideal pro ${B.short}). Pode ser em dias diferentes.`)}</p>
-      <div class="sessdots">${Array.from({ length: n.n }, (_, k) => `<i class="${k < s.sessions.length ? "f" : ""}">${k < s.sessions.length ? "✓" : k + 1}</i>`).join("")}</div>
-      <div class="sessbox" id="sessbox">
-        <div class="row"><div class="grow"><div class="clock" id="sClock">${B.session}:00</div><div class="small" style="opacity:.75">Para antes se ele cansar</div></div><button class="miniclick" id="sClick" aria-label="Clicker">click</button></div>
+      <div class="sess">${Array.from({ length: n.n }, (_, k) => `<i class="${k < s.sessions.length ? "f" : ""}"></i>`).join("")}<span class="small muted" style="margin-left:4px">${s.sessions.length}/${n.n}</span></div>
+      <div class="stimer" id="sessbox">
+        <div><b id="sClock">${B.session}:00</b><div class="small" style="opacity:.8">Para antes se ele cansar</div></div><button class="mini" id="sClick" aria-label="Clicker">click</button>
         <div class="reps"><button class="hit" id="sHit"><b id="sHitN">0</b>Acertou</button><button class="miss" id="sMiss"><b id="sMissN">0</b>Errou</button></div>
-        <button class="btn main block" id="sEnd" style="margin-top:12px">Terminar sessão</button>
+        <button class="btn main block end" id="sEnd">Terminar sessão</button>
       </div>
-      ${n.id === "banheiro" ? `<button class="btn main block" id="sQuick">✓ Segui a rotina hoje</button>` : `<button class="btn gold block" id="sStart">▶ Iniciar sessão</button>`}
+      ${n.id === "banheiro" ? `<button class="btn main block" id="sQuick">✓ Segui a rotina hoje</button>` : `<button class="btn tan block" id="sStart">▶ Iniciar sessão</button>`}
       ${s.sessions.length ? `<ul class="histl">${s.sessions.slice(-4).reverse().map((x) => `<li><span>${fmtDate(x.d)}</span><span>${x.hits + x.miss ? Math.round((x.hits / (x.hits + x.miss)) * 100) + "% acerto · " : ""}${x.dur ? Math.max(1, Math.round(x.dur / 60)) + " min" : ""}</span></li>`).join("")}</ul>` : ""}
       ${finishBlock(n, s)}</div>`;
     if (n.probs && n.probs.length) h += `<div class="panel"><h3>Travou? Problemas comuns</h3>${n.probs.map(([q, a]) => `<details class="prob"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</div>`;
   } else {
-    h += `<div class="panel"><div class="panel-head"><h3>Checklist</h3><span class="chip">${s.checks.length}/${n.checks.length}</span></div><ul class="stepl checks">${n.checks.map((x, k) => `<li class="${s.checks.includes(k) ? "ok" : ""}" data-ck="${k}"><span class="box"></span><span>${esc(x)}</span></li>`).join("")}</ul>
-      ${s.done ? `<p style="margin:10px 0 0;font-weight:800;color:var(--teal-d)">Concluído ✓</p>` : `<button class="btn main block" id="finish" style="margin-top:12px" ${s.checks.length >= n.checks.length ? "" : "disabled"}>Tudo feito! Concluir</button>`}</div>`;
+    h += `<div class="panel"><div class="panel-head"><h3>Checklist</h3><span class="chip">${s.checks.length}/${n.checks.length}</span></div><ul class="checks">${n.checks.map((x, k) => `<li class="${s.checks.includes(k) ? "ok" : ""}" data-ck="${k}"><span class="box"></span><span>${esc(x)}</span></li>`).join("")}</ul>
+      ${s.done ? `<p style="margin:10px 0 0;font-weight:800;color:var(--green)">Concluído ✓</p>` : `<button class="btn main block" id="finish" style="margin-top:12px" ${s.checks.length >= n.checks.length ? "" : "disabled"}>Tudo feito! Concluir</button>`}</div>`;
   }
   h += `<div class="tip good"><b>💡 Dica</b>${esc(n.tip)}</div><div class="tip bad"><b>🚫 Evita</b>${esc(n.avoid)}</div>
     <button class="btn soft block" id="askAi" style="margin-top:6px">💬 Tô com dificuldade nessa lição</button>`;
@@ -504,7 +502,7 @@ function renderNode() {
   $("#askAi").onclick = () => { closeSheet(); goTab("ia"); sendChat(`Tô com dificuldade na lição ${n.t}`); };
 }
 function finishBlock(n, s) {
-  if (s.done) return `<p style="margin:10px 0 0;font-weight:800;color:var(--teal-d)">Aprendido ✓ Pode continuar revisando.</p>`;
+  if (s.done) return `<p style="margin:10px 0 0;font-weight:800;color:var(--green)">Aprendido ✓ Pode continuar revisando.</p>`;
   const needS = Math.max(0, n.n - s.sessions.length), needSt = n.steps.length - s.steps.length;
   const ready = needS === 0 && needSt === 0;
   return `<button class="btn main block" id="finish" style="margin-top:12px" ${ready ? "" : "disabled"}>🎓 Ele aprendeu! Concluir lição</button>${ready ? "" : `<p class="muted tiny center" style="margin:6px 0 0">Falta ${[needS && `${needS} sessão(ões)`, needSt && `marcar ${needSt} etapa(s)`].filter(Boolean).join(" e ")}</p>`}`;
@@ -551,7 +549,7 @@ function passExam(n) {
 /* ---------------- clicker ---------------- */
 let clickSessN = 0;
 function doClick(el) {
-  clickSound(); buzz(8); el.classList.add("p"); setTimeout(() => el.classList.remove("p"), 90);
+  clickSound(); buzz(8); el.classList.add("hit"); setTimeout(() => el.classList.remove("hit"), 90);
   const p = P(), k = dayKey(); p.clicks.total++; p.clicks.byDay[k] = (p.clicks.byDay[k] || 0) + 1;
   const keys = Object.keys(p.clicks.byDay).sort(); while (keys.length > 30) delete p.clicks.byDay[keys.shift()];
   clickSessN++; $("#clickCount").textContent = clickSessN; $("#clickTotal").textContent = p.clicks.total;
@@ -566,14 +564,14 @@ function defaultInt() { return ageMonths(dog()) < 4 ? 60 : ageMonths(dog()) < 7 
 function renderRotina() {
   const p = P(), k = dayKey(), today = p.logs.filter((l) => dayKey(l.t) === k);
   $("#pottyInt").value = String(p.pottyInt || defaultInt());
-  $("#logBtns").innerHTML = LOGS.map((l) => `<button class="logb ${l.cls}" data-log="${l.k}"><span class="e">${l.e}</span>${esc(l.label)}</button>`).join("");
+  $("#logBtns").innerHTML = LOGS.map((l) => `<button class="logbtn ${l.cls}" data-log="${l.k}"><span class="ic">${l.e}</span>${esc(l.label)}</button>`).join("");
   $("#stGood").textContent = today.filter((l) => l.k === "xixi" || l.k === "coco").length;
   $("#stBad").textContent = today.filter((l) => l.k === "acidente").length;
   $("#stSess").textContent = sessionsOn(k);
   const days = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
   const vals = days.map((d) => sessionsOn(dayKey(d))), max = Math.max(3, ...vals);
-  $("#week").innerHTML = days.map((d, i) => `<div class="d ${i === 6 ? "today" : ""}"><div class="b" style="height:${(vals[i] / max) * 80 + 4}%;${vals[i] ? "" : "background:var(--line)"}" title="${vals[i]} treinos"></div><span>${"DSTQQSS"[d.getDay()]}</span></div>`).join("");
-  $("#evlist").innerHTML = today.length ? today.slice().reverse().map((l) => { const L = LOGS.find((x) => x.k === l.k) || { e: "•", label: l.k }; const t = new Date(l.t); return `<li><span class="tm">${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}</span><span>${L.e} ${esc(L.label)}</span><button class="del" data-dellog="${l.t}" aria-label="Apagar">×</button></li>`; }).join("") : `<li class="muted">Nada registrado hoje ainda.</li>`;
+  $("#week").innerHTML = days.map((d, i) => `<div><i class="${vals[i] ? "" : "none"}" style="height:${(vals[i] / max) * 80 + 4}%" title="${vals[i]} treinos"></i><span>${"DSTQQSS"[d.getDay()]}</span></div>`).join("");
+  $("#evlist").innerHTML = today.length ? today.slice().reverse().map((l) => { const L = LOGS.find((x) => x.k === l.k) || { e: "•", label: l.k }; const t = new Date(l.t); return `<li><time>${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}</time><span>${L.e} ${esc(L.label)}</span><button class="x" data-dellog="${l.t}" aria-label="Apagar">×</button></li>`; }).join("") : `<li class="muted">Nada registrado hoje ainda.</li>`;
   tickPotty();
 }
 function tickPotty() {
@@ -582,7 +580,7 @@ function tickPotty() {
   const int = (p.pottyInt || defaultInt()) * 60000, arc = $("#ringArc");
   if (!last) { $("#pottyClock").textContent = "--"; $("#pottyUnit").textContent = "min"; arc.style.strokeDashoffset = 0; $("#pottyHint").textContent = "Registra o primeiro xixi pra começar a contar."; return; }
   const left = last.t + int - Date.now(), frac = Math.max(0, Math.min(1, left / int));
-  arc.style.strokeDashoffset = 326.7 * (1 - frac); arc.style.stroke = left < 0 ? "var(--red)" : left < 600000 ? "var(--gold)" : "var(--teal)";
+  arc.style.strokeDashoffset = 326.7 * (1 - frac); arc.style.stroke = left < 0 ? "var(--red)" : left < 600000 ? "var(--tan)" : "var(--green)";
   if (left <= 0) { $("#pottyClock").textContent = "Já!"; $("#pottyUnit").textContent = "agora"; $("#pottyTitle").textContent = "Hora de levar no xixi!"; $("#pottyHint").textContent = "Leva ele no lugar certo e espera 2–3 minutos."; }
   else { const m = Math.ceil(left / 60000); $("#pottyClock").textContent = m >= 60 ? Math.floor(m / 60) + "h" + String(m % 60).padStart(2, "0") : m; $("#pottyUnit").textContent = m >= 60 ? "" : "min"; $("#pottyTitle").textContent = "Próxima ida ao xixi"; $("#pottyHint").textContent = `Último registro às ${new Date(last.t).toTimeString().slice(0, 5)}.`; }
 }
@@ -624,10 +622,10 @@ function renderChat() {
   $("#memTags").innerHTML = mem.length ? `<span>🧠 Lembro:</span>` + mem.map((m) => `<span>${esc(m)}</span>`).join("") : "";
   const chat = d.chat || [];
   if (!chat.length) {
-    $("#chat").innerHTML = `<div class="msg a">${md(`Fala! Sou a **IA Guaipecas** 🐾 Já sei que o ${d.name} é ${BREEDS[d.breed].name} e tô por dentro da trilha dele.\n\nMe conta o que tá difícil — quanto mais detalhe (onde, quando, o que acontece antes), melhor eu te ensino. Também pode me contar coisas dele (ex: *"moramos em apartamento"*, *"ele tem medo de moto"*) que eu guardo.`)}</div>`;
+    $("#chat").innerHTML = `<div class="msg bot md">${md(`Fala! Sou a **IA Guaipecas** 🐾 Já sei que o ${d.name} é ${BREEDS[d.breed].name} e tô por dentro da trilha dele.\n\nMe conta o que tá difícil — quanto mais detalhe (onde, quando, o que acontece antes), melhor eu te ensino. Também pode me contar coisas dele (ex: *"moramos em apartamento"*, *"ele tem medo de moto"*) que eu guardo.`)}</div>`;
     return;
   }
-  $("#chat").innerHTML = chat.map((m, i) => m.role === "note" ? `<div class="memnote">${esc(m.content)}</div>` : m.role === "user" ? `<div class="msg u">${esc(m.content)}</div>` : `<div class="msg a">${md(m.content)}${m.opts ? `<div class="opts">${m.opts.map((o) => `<button data-pick="${esc(o.id)}" data-mi="${i}" class="${o.id === "_none" ? "no" : ""}">${esc(o.t)}</button>`).join("")}</div>` : ""}${m.intent && !m.opts ? `<div class="fb"><button data-fb="up" data-mi="${i}" class="${m.fb === "up" ? "on" : ""}">👍 Ajudou</button><button data-fb="down" data-mi="${i}" class="${m.fb === "down" ? "on" : ""}">👎 Não ajudou</button>${m.deep ? `<button data-fb="deep" data-mi="${i}">🔎 Mais detalhes</button>` : ""}</div>` : ""}</div>`).join("");
+  $("#chat").innerHTML = chat.map((m, i) => m.role === "note" ? `<div class="memnote">${esc(m.content)}</div>` : m.role === "user" ? `<div class="msg me">${esc(m.content)}</div>` : `<div class="msg bot md">${md(m.content)}${m.opts ? `<div class="opts">${m.opts.map((o) => `<button data-pick="${esc(o.id)}" data-mi="${i}" class="${o.id === "_none" ? "no" : ""}">${esc(o.t)}</button>`).join("")}</div>` : ""}${m.intent && !m.opts ? `<div class="fb"><button data-fb="up" data-mi="${i}" class="${m.fb === "up" ? "on" : ""}">👍 Ajudou</button><button data-fb="down" data-mi="${i}" class="${m.fb === "down" ? "on" : ""}">👎 Não ajudou</button>${m.deep ? `<button data-fb="deep" data-mi="${i}">🔎 Mais detalhes</button>` : ""}</div>` : ""}</div>`).join("");
 }
 function pushMsg(m) { const d = dog(); d.chat ||= []; d.chat.push({ ...m, t: Date.now() }); if (d.chat.length > 60) d.chat = d.chat.slice(-60); }
 let thinking = false;
@@ -640,7 +638,7 @@ function sendChat(text) {
   p.ai.asked++; const k = dayKey(); p.ai.byDay[k] = (p.ai.byDay[k] || 0) + 1;
   const keys = Object.keys(p.ai.byDay).sort(); while (keys.length > 30) delete p.ai.byDay[keys.shift()];
   renderChat(); scrollChat(); thinking = true;
-  const typing = document.createElement("div"); typing.className = "msg a"; typing.innerHTML = `<span class="typing"><i></i><i></i><i></i></span>`; $("#chat").appendChild(typing); scrollChat();
+  const typing = document.createElement("div"); typing.className = "msg bot"; typing.innerHTML = `<span class="typing"><i></i><i></i><i></i></span>`; $("#chat").appendChild(typing); scrollChat();
   setTimeout(() => {
     typing.remove(); thinking = false;
     pushMsg(answer(text, learned));
@@ -763,7 +761,7 @@ function openVax(id) {
     <label class="field"><span>Vacina</span><input name="name" list="vaxList" required maxlength="60" value="${esc(v?.name || "")}" placeholder="Ex: V10 – 2ª dose"><datalist id="vaxList">${VACCINES.map((x) => `<option value="${esc(x)}">`).join("")}</datalist></label>
     <div class="grid2"><label class="field"><span>Aplicada em</span><input name="date" type="date" required value="${esc(v?.date || dayKey())}"></label>
     <label class="field"><span>Próxima dose</span><input name="next" type="date" value="${esc(v?.next || "")}"></label></div>
-    <div class="row wrapr" style="margin:-4px 0 14px"><span class="small muted">Atalho:</span><button type="button" class="btn ghost sm" data-plus="21">+21 dias</button><button type="button" class="btn ghost sm" data-plus="30">+30 dias</button><button type="button" class="btn ghost sm" data-plus="365">+1 ano</button></div>
+    <div class="hrow wrapr" style="margin:-4px 0 14px"><span class="small muted">Atalho:</span><button type="button" class="btn ghost sm" data-plus="21">+21 dias</button><button type="button" class="btn ghost sm" data-plus="30">+30 dias</button><button type="button" class="btn ghost sm" data-plus="365">+1 ano</button></div>
     <label class="field"><span>Veterinário/clínica</span><input name="vet" maxlength="60" value="${esc(v?.vet || "")}"></label>
     <button class="btn main block" type="submit">Salvar</button>
     ${v ? `<button class="btn ghost block" type="button" id="delVax" style="margin-top:10px;color:var(--red)">Excluir</button>` : ""}</form>`, () => {
@@ -810,14 +808,14 @@ async function openAdmin() {
 }
 function renderAdmin() {
   const U = ADM.users, cnt = (s) => U.filter((u) => u.status === s).length;
-  $("#admCounts").innerHTML = `<div><b style="color:#B27320">${cnt("pending")}</b><span>pendentes</span></div><div><b style="color:var(--teal)">${cnt("approved")}</b><span>aprovados</span></div><div><b>${U.length}</b><span>total</span></div>`;
+  $("#admCounts").innerHTML = `<div><b style="color:var(--tan)">${cnt("pending")}</b><span>pendentes</span></div><div><b style="color:var(--green)">${cnt("approved")}</b><span>aprovados</span></div><div><b>${U.length}</b><span>total</span></div>`;
   const q = ADM.q.toLowerCase().replace(/\D/g, "") || null, qt = ADM.q.toLowerCase().trim();
   let list = U.filter((u) => ADM.filter === "pending" ? u.status === "pending" : ADM.filter === "approved" ? u.status === "approved" : ["rejected", "blocked"].includes(u.status));
   if (qt) list = U.filter((u) => u.name.toLowerCase().includes(qt) || u.email.includes(qt) || (q && u.phone.includes(q)));
   const lbl = { pending: "Pendente", approved: "Aprovado", rejected: "Recusado", blocked: "Bloqueado" };
   const when = (t) => t ? new Date(t).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
   const ph = (p) => p.length === 11 ? `(${p.slice(0, 2)}) ${p.slice(2, 7)}-${p.slice(7)}` : p.length === 10 ? `(${p.slice(0, 2)}) ${p.slice(2, 6)}-${p.slice(6)}` : p;
-  $("#admList").innerHTML = list.length ? list.map((u) => `<div class="ucard"><div class="row"><h4 class="grow">${esc(u.name)}</h4><span class="st ${u.status}">${lbl[u.status]}</span></div>
+  $("#admList").innerHTML = list.length ? list.map((u) => `<div class="ucard"><div class="hrow"><h4 class="grow">${esc(u.name)}</h4><span class="st ${u.status}">${lbl[u.status]}</span></div>
     <div class="meta">✉️ ${esc(u.email)}<br>📱 <a href="https://wa.me/55${esc(u.phone)}" target="_blank" rel="noopener">${esc(ph(u.phone))}</a><br>🗓️ Cadastro: ${when(u.createdAt)}${u.lastLogin ? ` · Último acesso: ${when(u.lastLogin)}` : ""}</div>
     ${u.dogs && u.dogs.length ? `<div class="minidogs">${u.dogs.map((d) => `<span><i style="${d.photo ? `background-image:url(${d.photo})` : ""}"></i>${esc(d.name)} · ${esc(BREEDS[d.breed]?.short || "")} · ${d.done} lições · ⭐${d.xp}</span>`).join("")}</div>` : ""}
     <div class="acts">${u.status !== "approved" ? `<button class="btn main sm" data-ua="approve" data-id="${u.id}">✓ Aprovar</button>` : ""}${u.status === "pending" ? `<button class="btn ghost sm" data-ua="reject" data-id="${u.id}">Recusar</button>` : ""}${u.status === "approved" ? `<button class="btn ghost sm" data-ua="block" data-id="${u.id}">🔒 Bloquear</button>` : ""}<button class="btn ghost sm" data-ua="password" data-id="${u.id}">🔑 Senha</button><button class="btn ghost sm" data-ua="delete" data-id="${u.id}" style="color:var(--red)">Excluir</button></div></div>`).join("")
