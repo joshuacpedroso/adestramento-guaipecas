@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Adestramento Guaipecas</title>
+<meta name="description" content="Guia de adestramento completo e gamificado por raça: Pastor Alemão, Vira-lata, Malinois e Pitbull.">
+<meta name="theme-color" content="#0B8071">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Guaipecas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/styles.css?v=1">
+</head>
+<body>
+
+<!-- ============ LOGIN / CADASTRO ============ -->
+<section class="screen" id="s-auth">
+  <div class="auth wrap">
+    <img class="logo" src="/assets/logo.webp" alt="Adestramento Guaipecas" width="1571" height="445">
+    <div class="card">
+      <div class="seg" role="tablist">
+        <button class="on" data-auth="login" role="tab">Entrar</button>
+        <button data-auth="register" role="tab">Criar conta</button>
+      </div>
+      <form id="f-login" autocomplete="on">
+        <div class="err hidden" data-err></div>
+        <label class="field"><span>E-mail ou telefone</span><input name="login" autocomplete="username" required placeholder="voce@email.com ou (51) 99999-9999"></label>
+        <label class="field"><span>Senha</span><input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn main block" type="submit">Entrar</button>
+      </form>
+      <form id="f-register" class="hidden" autocomplete="on">
+        <div class="err hidden" data-err></div>
+        <label class="field"><span>Nome completo</span><input name="name" autocomplete="name" required maxlength="60"></label>
+        <label class="field"><span>E-mail</span><input name="email" type="email" autocomplete="email" required></label>
+        <label class="field"><span>Telefone (WhatsApp)</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="(51) 99999-9999"></label>
+        <label class="field"><span>Senha</span><input name="password" type="password" autocomplete="new-password" required minlength="6"><small>Pelo menos 6 caracteres.</small></label>
+        <button class="btn main block" type="submit">Criar conta</button>
+        <p class="muted small center" style="margin:12px 0 0">Teu cadastro passa pela aprovação da Adestramento Guaipecas antes de liberar o app.</p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AGUARDANDO APROVAÇÃO ============ -->
+<section class="screen" id="s-pending">
+  <div class="auth wrap pending">
+    <img class="logo" src="/assets/logo.webp" alt="Adestramento Guaipecas" width="1571" height="445">
+    <div class="card">
+      <div class="big">⏳</div>
+      <h2 style="font-size:1.6rem;margin-bottom:8px" id="pendTitle">Cadastro em análise</h2>
+      <p class="muted" id="pendText">Assim que o admin aprovar, teu acesso é liberado. Pode fechar o app e voltar depois.</p>
+      <button class="btn main block" id="pendCheck" style="margin-top:8px">Verificar agora</button>
+      <button class="btn ghost block" data-logout style="margin-top:10px">Sair</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CADASTRO DO CÃO ============ -->
+<section class="screen" id="s-dog">
+  <div class="wrap" style="padding-top:calc(16px + var(--safe-t));padding-bottom:40px">
+    <div class="row" style="margin-bottom:16px;min-height:44px">
+      <button class="xclose" id="dogBack" aria-label="Voltar" style="position:static">‹</button>
+      <h2 style="font-size:1.5rem" id="dogFormTitle">Cadastrar meu cão</h2>
+    </div>
+    <form id="f-dog" class="panel">
+      <div class="err hidden" data-err></div>
+      <div class="photopick">
+        <div class="dogphoto" id="dogPhotoPrev">🐶</div>
+        <div>
+          <label class="btn soft sm" for="dogPhotoIn">📷 Escolher foto</label>
+          <input type="file" id="dogPhotoIn" accept="image/*" class="hidden">
+          <p class="muted tiny" style="margin:6px 0 0">A foto fica leve, a gente comprime automático.</p>
+        </div>
+      </div>
+      <label class="field"><span>Nome do cão</span><input name="name" required maxlength="30" placeholder="Ex: Thor"></label>
+      <div class="field"><span>Raça</span></div>
+      <div class="breedpick" id="breedPick"></div>
+      <div class="grid2">
+        <label class="field"><span>Nascimento</span><input name="birth" type="date" required></label>
+        <label class="field"><span>Peso (kg)</span><input name="weight" type="number" inputmode="decimal" step="0.1" min="0" max="120" placeholder="Ex: 12"></label>
+      </div>
+      <div class="field"><span>Sexo</span>
+        <div class="seg" id="sexSeg"><button type="button" data-sex="m" class="on">♂ Macho</button><button type="button" data-sex="f">♀ Fêmea</button></div>
+      </div>
+      <label class="switch">Castrado(a)<input type="checkbox" name="neutered"></label>
+      <label class="field" style="margin-top:14px"><span>Observações</span><textarea name="notes" maxlength="600" placeholder="Medos, manias, saúde, de onde veio… A IA usa isso pra te ajudar."></textarea></label>
+      <button class="btn main block" type="submit" id="dogSave">Salvar e começar</button>
+      <button class="btn ghost block hidden" type="button" id="dogDelete" style="margin-top:12px;color:var(--red)">Excluir este cão</button>
+    </form>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section class="screen" id="s-app">
+  <header class="top">
+    <div class="wrap">
+      <button class="avatar" id="hAvatar" aria-label="Perfil do cão" data-tab="cao"></button>
+      <div class="who"><h1 id="hName">—</h1><p id="hSub">—</p></div>
+      <span class="chip" id="hStreak" title="Dias seguidos treinando">🔥 0</span>
+      <span class="chip xp" id="hXp" title="Pontos de experiência">⭐ 0</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="view on" id="v-trilha"><div class="wrap">
+      <div class="hero" id="hero"></div>
+      <div class="panel missions" id="missions"></div>
+      <div id="path"></div>
+    </div></section>
+
+    <section class="view" id="v-clicker"><div class="wrap">
+      <div class="panel">
+        <div class="clickwrap">
+          <button class="clicker" id="bigClicker" aria-label="Clicar">click</button>
+          <div class="clickcount" id="clickCount">0</div>
+          <p class="muted small" style="margin:4px 0 0">cliques nesta sessão · <span id="clickTotal">0</span> no total</p>
+          <button class="btn ghost sm" id="resetClicks" style="margin-top:12px">Zerar sessão</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Como usar o clicker</h3>
+        <ol class="ol">
+          <li><b>Carrega o som:</b> clica e dá petisco na hora, 15 vezes, sem pedir nada.</li>
+          <li><b>Clica no segundo exato</b> em que ele faz o certo (bumbum encostou, olhou pra ti).</li>
+          <li><b>Todo clique ganha petisco</b>, até o sem querer. Senão o som perde o valor.</li>
+          <li><b>Sessões curtas:</b> <span id="clickSess">5</span> minutos, e para enquanto ele ainda tá animado.</li>
+          <li>O clique <b>marca</b>, não chama. Pra chamar usa o nome.</li>
+        </ol>
+        <p class="muted small" style="margin:10px 0 0">Sem clicker? Um "Isso!" sempre igual funciona do mesmo jeito.</p>
+      </div>
+    </div></section>
+
+    <section class="view" id="v-rotina"><div class="wrap">
+      <div class="panel">
+        <div class="timer">
+          <div class="ringbox">
+            <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--line)" stroke-width="11"/><circle id="ringArc" cx="60" cy="60" r="52" fill="none" stroke="var(--teal)" stroke-width="11" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg>
+            <div class="t"><div><span id="pottyClock">--</span><small id="pottyUnit">min</small></div></div>
+          </div>
+          <div class="grow">
+            <h3 style="margin-bottom:4px" id="pottyTitle">Próxima ida ao xixi</h3>
+            <p class="muted small" id="pottyHint" style="margin:0">Registra o primeiro xixi pra começar a contar.</p>
+            <label class="small muted" style="display:flex;align-items:center;gap:6px;margin-top:8px;font-weight:700">A cada
+              <select id="pottyInt" style="border:2px solid var(--line);border-radius:10px;background:var(--paper);padding:4px 6px">
+                <option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option><option value="240">4h</option><option value="360">6h</option>
+              </select></label>
+          </div>
+        </div>
+        <div class="logs" id="logBtns"></div>
+      </div>
+      <div class="panel">
+        <h3>Hoje</h3>
+        <div class="stats">
+          <div><b id="stGood">0</b><span>no lugar certo</span></div>
+          <div><b id="stBad" style="color:var(--red)">0</b><span>acidentes</span></div>
+          <div><b id="stSess">0</b><span>treinos</span></div>
+        </div>
+        <p class="small muted" style="margin:14px 0 0;font-weight:800">Treinos nos últimos 7 dias</p>
+        <div class="week" id="week"></div>
+      </div>
+      <div class="panel">
+        <h3>Registro do dia</h3>
+        <ul class="evlist" id="evlist"></ul>
+      </div>
+    </div></section>
+
+    <section class="view" id="v-ia"><div class="wrap">
+      <div class="panel">
+        <div class="aihead">
+          <div class="bot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 3v4M9 12h.01M15 12h.01M9.5 15.5h5"/></svg></div>
+          <div class="grow">
+            <h3 style="margin:0">IA Guaipecas</h3>
+            <p class="muted small" style="margin:0">Adestradora do <b id="iaDog">teu cão</b> · aprende com a conversa</p>
+          </div>
+          <button class="btn ghost sm" id="chatClear" aria-label="Limpar conversa">🗑️</button>
+        </div>
+        <div class="memtags" id="memTags"></div>
+      </div>
+      <div class="qchips" id="qchips"></div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+    </div></section>
+
+    <section class="view" id="v-cao"><div class="wrap" id="caoBody"></div></section>
+  </main>
+
+  <div class="composer hidden" id="composer">
+    <div class="wrap">
+      <textarea id="chatIn" rows="1" placeholder="Ex: ele morde meu pé" aria-label="Mensagem"></textarea>
+      <button class="btn main" id="chatSend" aria-label="Enviar"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </div>
+
+  <nav class="tabs" aria-label="Seções">
+    <div class="wrap">
+      <button class="tab on" data-tab="trilha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/></svg>Trilha</button>
+      <button class="tab" data-tab="clicker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="6" width="14" height="14" rx="5"/><circle cx="12" cy="13" r="3"/><path d="M9 3h6"/></svg>Clicker</button>
+      <button class="tab" data-tab="rotina"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>Rotina</button>
+      <button class="tab" data-tab="ia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>IA</button>
+      <button class="tab" data-tab="cao"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5.2C10 3.4 8.6 2 7 2S4 3.4 4 5.2c0 .9.4 1.8 1 2.3M14 5.2C14 3.4 15.4 2 17 2s3 1.4 3 3.2c0 .9-.4 1.8-1 2.3"/><path d="M5 9c0-1.5 3-3 7-3s7 1.5 7 3v5c0 4-3 7-7 7s-7-3-7-7z"/><path d="M10 12h.01M14 12h.01M11 16h2"/></svg><span class="dotn hidden" id="vaxDot"></span>Cão</button>
+    </div>
+  </nav>
+</section>
+
+<!-- ============ ADMIN ============ -->
+<section class="screen" id="s-admin">
+  <header class="top"><div class="wrap admtop">
+    <img src="/assets/mark.webp" alt="" width="240" height="160">
+    <div class="grow"><h1 style="font-size:1.25rem">Painel Admin</h1><p class="muted small" style="margin:0" id="admStorage">—</p></div>
+    <button class="btn ghost sm" data-logout>Sair</button>
+  </div></header>
+  <div class="wrap" style="padding-bottom:40px">
+    <div id="admWarn"></div>
+    <div class="seg" style="margin:6px 0 14px" id="admSeg">
+      <button class="on" data-adm="users">👥 Usuários</button>
+      <button data-adm="ia">🧠 Ensinar a IA</button>
+    </div>
+    <div id="admUsers">
+      <div class="counts" id="admCounts"></div>
+      <div class="seg" style="margin-bottom:12px" id="admFilter">
+        <button class="on" data-f="pending">Pendentes</button><button data-f="approved">Aprovados</button><button data-f="other">Outros</button>
+      </div>
+      <label class="field"><input id="admSearch" placeholder="🔎 Buscar por nome, e-mail ou telefone"></label>
+      <div id="admList"></div>
+    </div>
+    <div id="admIa" class="hidden"></div>
+  </div>
+</section>
+
+<!-- sheets -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true">
+  <div class="scrim" data-close></div>
+  <div class="card"><button class="xclose" data-close aria-label="Fechar">×</button><div class="grab"></div><div class="wrap" id="sheetBody"></div></div>
+</div>
+
+<div class="celebrate" id="celebrate"><div class="c">
+  <div class="e" id="celeE">🏆</div>
+  <h2 id="celeTitle">Lição concluída!</h2>
+  <p id="celeText" class="muted"></p>
+  <div class="xpgain" id="celeXp">+100 XP</div>
+  <button class="btn main block" id="celeOk">Bora pra próxima</button>
+</div></div>
+
+<div id="confetti"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/assets/content.js?v=1"></script>
+<script src="/assets/brain.js?v=1"></script>
+<script src="/assets/app.js?v=1"></script>
+</body>
+</html>
